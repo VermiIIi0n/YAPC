@@ -66,7 +66,7 @@ class SearchOption:
 
 
 def illust(pid: str, host: str = "https://www.pixiv.net") -> api_ret:
-    """### illust detail
+    r"""### illust detail
     ```
 {
         "error": false,
@@ -260,7 +260,7 @@ def illust(pid: str, host: str = "https://www.pixiv.net") -> api_ret:
 
 
 def illust_pages(pid: str, host: str = "https://www.pixiv.net") -> api_ret:
-    """Get illust pages
+    r"""Get illust pages
     ```
         {
         "error": false,
@@ -285,7 +285,7 @@ def illust_pages(pid: str, host: str = "https://www.pixiv.net") -> api_ret:
 
 
 def illust_ugoira_meta(pid: str, lang: str = "en", host: str = "https://www.pixiv.net") -> api_ret:
-    """Get illust ugoira meta
+    r"""Get illust ugoira meta
     ```
     {
         "error": false,
@@ -318,7 +318,7 @@ def illust_ugoira_meta(pid: str, lang: str = "en", host: str = "https://www.pixi
 
 def illust_recommend(pid: str = None, illust_ids: Iterable[str] = (),
                      limit: int = 18, lang: str = "en", host: str = "https://www.pixiv.net") -> api_ret:
-    """### Get recommended illusts
+    r"""### Get recommended illusts
     ```
         {
         "error": false,
@@ -443,7 +443,7 @@ def user_extra(lang: str = "en", host: str = "https://www.pixiv.net") -> api_ret
 
 
 def user_illusts(uid: str, ids: Iterable[str], host: str = "https://www.pixiv.net") -> api_ret:
-    """### Get illusts based on ids
+    r"""### Get illusts based on ids
     ```
         {
         "error": false,
@@ -490,7 +490,7 @@ def user_illusts(uid: str, ids: Iterable[str], host: str = "https://www.pixiv.ne
 
 def user_illusts_bookmarks(uid: str, offset: int, limit: int = 48, tag: str = None,
                            rest: Literal["show", "hide"] = "show", lang: str = "en", host: str = "https://www.pixiv.net") -> api_ret:
-    """### Get bookmarks of a user
+    r"""### Get bookmarks of a user
     * `rest` Public/Private bookmarks  
 
     ```
@@ -547,7 +547,7 @@ def user_illusts_bookmarks(uid: str, offset: int, limit: int = 48, tag: str = No
 
 def user_works_latest(uid: str, lang: str = "en",
                       host: str = "https://www.pixiv.net") -> api_ret:
-    """### Get latest works of a user
+    r"""### Get latest works of a user
     ```
         {
         "error": false,
@@ -598,7 +598,7 @@ def user_works_latest(uid: str, lang: str = "en",
 
 
 def user(uid: str, full: int = 1, lang: str = "en", host: str = "https://www.pixiv.net") -> api_ret:
-    """### Get user info
+    r"""### Get user info
     ```
     {
         "error": false,
@@ -667,7 +667,7 @@ def user(uid: str, full: int = 1, lang: str = "en", host: str = "https://www.pix
 
 
 def user_profile_all(uid: str, lang: str = "en", host: str = "https://www.pixiv.net") -> api_ret:
-    """### Get user profile
+    r"""### Get user profile
     ```
     {
     "error": false,
@@ -771,7 +771,7 @@ def user_profile_top(uid: str, lang: str = "en", host: str = "https://www.pixiv.
 
 
 def tag_info(tag: str, lang: str = "en", host: str = "https://www.pixiv.net") -> api_ret:
-    """### Get information about a tag
+    r"""### Get information about a tag
     ```
         {
         "error": false,
@@ -831,7 +831,7 @@ def favorite_tags_save(tags: Iterable[str], host: str = "https://www.pixiv.net")
 
 
 def search_tags(tag: str, lang: str = "en", host: str = "https://www.pixiv.net") -> api_ret:
-    """### Search for tags
+    r"""### Search for tags
     ```
         {
         "error": false,
@@ -863,7 +863,7 @@ def search_tags(tag: str, lang: str = "en", host: str = "https://www.pixiv.net")
 
 def search_artworks(opts: SearchOption, lang: str = "en",
                     host: str = "https://www.pixiv.net") -> api_ret:
-    """### Search for illustrations
+    r"""### Search for illustrations
     ```
     {
     "error": false,
@@ -1007,7 +1007,7 @@ def search_artworks(opts: SearchOption, lang: str = "en",
 
 
 def top_illust(mode: _Mode = "all", lang: str = "en", host: str = "https://www.pixiv.net") -> api_ret:
-    """### top illust
+    r"""### top illust
     ```
         {
         "error": false,
@@ -1364,7 +1364,7 @@ def top_illust(mode: _Mode = "all", lang: str = "en", host: str = "https://www.p
 # Non Ajax APIs
 
 def suggest_tags_by_image(filename: str, file: bytes, host: str = "https://www.pixiv.net"):
-    """
+    r"""
     ### Suggest tags by image.
     ```
         {
