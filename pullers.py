@@ -30,7 +30,6 @@ __all__ = [
     "AsyncActionChain",
     "AsyncHttpActionChain",
     "MaxRetryReached",
-    "FileCorrupted",
     "Modifier",
 ]
 
@@ -45,7 +44,7 @@ class BasePuller:
     def event_hooks(self) -> EventHook:
         """Event hook for this puller."""
         raise NotImplementedError()
-    
+
     @abstractmethod
     def pull(self, url: str, path: str) -> Any:
         """Pull the file from the url to the path."""
@@ -145,18 +144,21 @@ class AsyncWorker(BaseWorker):
                         ) as r:
                             await event_hooks.aemit("worker.response_get", self, r)
                             # Iterate over response chunks
-                            async for chunk in r.aiter_bytes(chunk_size=2**18):  # 256KB
+                            # 256KB
+                            async for chunk in r.aiter_bytes(chunk_size=2**18):
                                 await event_hooks.aemit("worker.bytes_get", self, r, chunk)
                                 await f.write(chunk)
                             await f.flush()
                             await event_hooks.aemit("worker.success", self, r)
-                    self.future.set_result(self.path)  # set result for placeholder
+                    # set result for placeholder
+                    self.future.set_result(self.path)
                     break  # Quit successfully
                 # Retry on network IO error
                 except (httpx.HTTPError, httpx.StreamError) as e:
                     retry += 1
                     if retry > self.max_retry:
-                        raise MaxRetryReached(f"Max retry reached: {retry} times") from e
+                        raise MaxRetryReached(
+                            f"Max retry reached: {retry} times") from e
                     await event_hooks.aemit("worker.retry", self, e, retry)
                     await asyncio.sleep(min(30, 1.7 ** retry))
         # Fatal Errors
@@ -198,6 +200,7 @@ class AsyncMaster(BaseMaster):
 
 class AsyncPuller(BasePuller):
     """### Async Puller"""
+
     def __init__(
         self,
         *,
@@ -265,7 +268,8 @@ class AsyncPuller(BasePuller):
                 self._client.event_hooks = self._event_hooks  # type: ignore[assignment]
             return action
 
-        self._on = PullerEventHint(strchain=StrChain(joint='.', callback=subscribe))
+        self._on = PullerEventHint(
+            strchain=StrChain(joint='.', callback=subscribe))
 
     @property
     def client(self):
@@ -393,17 +397,17 @@ class AsyncPuller(BasePuller):
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> bool:
         await self.aclose()
         return False
-    
+
     def __repr__(self):
-        return f"{self.__class__.__name__}:\n"+\
-            f"  max_retry: {self.max_retry}\n"+\
-            f"  overwrite: {self.overwrite}\n"+\
-            f"  headers: {self.headers}\n"+\
-            f"  params: {self.params}\n"+\
-            f"  cookies: {self.cookies}\n"+\
-            f"  proxies: {self.proxies}\n"+\
+        return f"{self.__class__.__name__}:\n" +\
+            f"  max_retry: {self.max_retry}\n" +\
+            f"  overwrite: {self.overwrite}\n" +\
+            f"  headers: {self.headers}\n" +\
+            f"  params: {self.params}\n" +\
+            f"  cookies: {self.cookies}\n" +\
+            f"  proxies: {self.proxies}\n" +\
             f"  event_hooks: {self.event_hooks}\n"
-        
+
 
 ################### Useful Modifiers #####################
 
@@ -604,10 +608,12 @@ class on_puller_hint(Hint):
     def spawn(self):
         """Callback Type: (event_name: str, AsyncPuller) -> None"""
         return self._chain.spawn
+
     @property
     def destroy(self):
         """Callback Type: (event_name: str, AsyncPuller) -> None"""
         return self._chain.destroy
+
     @property
     def join(self):
         """Callback Type: (event_name: str, AsyncPuller) -> None"""
@@ -641,18 +647,22 @@ class on_worker_hint(Hint):
         """Callback Type: (event_name: str, AsyncWorker, Exception) -> bool:
         whether to ignore the exception"""
 
+
 class PullerEventHint(Hint):
     """Puller Event Hint."""
     @property
     def puller(self) -> on_puller_hint:
-        return self._chain.puller # type: ignore
+        return self._chain.puller  # type: ignore
+
     @property
     def worker(self) -> on_worker_hint:
-        return self._chain.worker # type: ignore
+        return self._chain.worker  # type: ignore
+
     @property
     def request(self):
         """Callback Type: (Request) -> None"""
         return self._chain.request
+
     @property
     def response(self):
         """Callback Type: (Response) -> None"""

@@ -10,30 +10,34 @@ from datetime import datetime, timezone
 from typing import Any, Callable, TypeVar, Type, Literal, overload, MutableMapping
 
 __all__ = [
-    "proper_setter", "UID", "DBRef", "Email", "OrderedItem", "FieldTypeError"
+    "proper_setter", "UID", "DBRef", "Email", "OrderedItem", "FieldTypeError",
     "Source", "CreatorRef", "Creator", "Alias", "Tag", "Picture", "Geo",
     "FrameInfo", "Dimensions", "Pixiv", "Album", "Binary", "Shelf", "Library",
-    "PictureShelf", "CreatorShelf", "TagShelf", "AlbumShelf", "BinaryShelf",
+    "CreatorShelf", "TagShelf", "AlbumShelf",
 ]
 UNSET = object()
 UID = ObjectId
 _V = TypeVar('_V')
 
+
 class FieldTypeError(TypeError):
     ...
 
-@overload
-def proper_setter(value_type: Type[_V], default=UNSET, # type: ignore
-    dissolve:bool=False, is_list:Literal[False]=False) ->Callable[..., _V]:
-    ...
 
 @overload
-def proper_setter(value_type: Type[_V], default=UNSET, 
-    dissolve:bool=False, is_list:Literal[True]=True) ->Callable[..., list[_V]]:
+def proper_setter(value_type: Type[_V], default=UNSET,  # type: ignore
+                  dissolve: bool = False, is_list: Literal[False] = False) -> Callable[..., _V]:
     ...
 
-def proper_setter(value_type: Type[_V], default=UNSET, 
-    dissolve:bool=False, is_list:bool=False) ->Callable[..., _V]:
+
+@overload
+def proper_setter(value_type: Type[_V], default=UNSET,
+                  dissolve: bool = False, is_list: Literal[True] = True) -> Callable[..., list[_V]]:
+    ...
+
+
+def proper_setter(value_type: Type[_V], default=UNSET,
+                  dissolve: bool = False, is_list: bool = False) -> Callable[..., _V]:
     """### Set `property.getter` and `property.setter` in one line
     * `value_type` is the type of the value
     * `default` is the default value of the property
@@ -45,40 +49,45 @@ def proper_setter(value_type: Type[_V], default=UNSET,
     """
     # removes parametrization
     value_type = getattr(value_type, '__origin__', value_type)
+
     def deco(func: Callable) -> Callable:
         prop_name = func.__name__
+
         @property  # type: ignore
         def prop(self):
             try:
                 return self[prop_name]
             except KeyError as e:
                 if default is UNSET:
-                    raise AttributeError(f"Attribute {prop_name} not set.") from e
-                else:
-                    return default
+                    raise AttributeError(
+                        f"Attribute {prop_name} not set.") from e
+                return default
+
         @prop.setter  # type: ignore
         @wraps(func)
-        def prop(self, value: _V|list[_V]):
+        def prop(self, value: _V | list[_V]):
             # Convert type
             if dissolve:
                 if is_list:
                     if not isinstance(value, list):
                         raise FieldTypeError(f"Expected list for {prop_name}")
-                    value = [v if isinstance(v, value_type) 
-                            else value_type(**v) for v in value]
+                    value = [v if isinstance(v, value_type)
+                             else value_type(**v) for v in value]
                 else:
                     value = value if isinstance(value, value_type) \
-                            else value_type(**value)
+                        else value_type(**value)
             # Dynamic type checking
             if is_list:
                 if not isinstance(value, list):
                     raise FieldTypeError(f"Expected list for {prop_name}")
                 for v in value:
                     if not isinstance(v, value_type):
-                        raise FieldTypeError(f"Expected {value_type} for {prop_name}")
+                        raise FieldTypeError(
+                            f"Expected {value_type} for {prop_name}")
             else:
                 if not isinstance(value, value_type):
-                    raise FieldTypeError(f"{prop_name} must be of type {value_type.__name__}")
+                    raise FieldTypeError(
+                        f"{prop_name} must be of type {value_type.__name__}")
             self[prop_name] = value
         return prop
     return deco  # type: ignore
@@ -86,9 +95,10 @@ def proper_setter(value_type: Type[_V], default=UNSET,
 
 class _Item(MutableMapping[str, Any]):
     """A `dict` wrapper, restricts its contents to a given set of keys."""
+
     def __init__(self, **kw):
         self._raw: dict[str, Any] = kw
-    
+
     @property
     def raw(self) -> dict[str, Any]:
         """The raw `dict`."""
@@ -124,7 +134,7 @@ class _Item(MutableMapping[str, Any]):
 
     def __setitem__(self, key: str, value: Any):
         self._raw[key] = value
-    
+
     def __delitem__(self, key: str):
         del self._raw[key]
 
@@ -138,6 +148,8 @@ class _Item(MutableMapping[str, Any]):
         if type(self) is type(other):
             return self.raw == other.raw
         return False
+
+    __hash__ = None  # type: ignore[assignment]
 
 
 class Source(_Item):
@@ -157,29 +169,34 @@ class Source(_Item):
         music = "music"
         """Value is a referrer to a music file in Music collection."""
     _types_map = {"url": types.url, "filename": types.filename, "bin": types.bin,
-        "picture": types.picture, "video": types.video, "music": types.music,
-        "unavailable": types.unavailable}
-    def __init__(self, type: types|str, value: str|UID|DBRef, label: str = None, **kw):
+                  "picture": types.picture, "video": types.video, "music": types.music,
+                  "unavailable": types.unavailable}
+
+    def __init__(self, type: types | str, value: str | UID | DBRef, label: str = None, **kw):
         super().__init__(**kw)
-        self.type = type # type: ignore
+        self.type = type  # type: ignore
         self.value = value
         if label:
             self.label = label
-    
+
     @property
     def type(self) -> types:
         return self._types_map[self["type"]]
+
     @type.setter
-    def type(self, value: types|str):
+    def type(self, value: types | str):
         if isinstance(value, str):
             value = self._types_map[value]
         self["type"] = value.value
+
     @property
-    def value(self) -> str|UID|DBRef:
+    def value(self) -> str | UID | DBRef:
         return self.get("value")
+
     @value.setter
-    def value(self, value: str|UID|DBRef):
+    def value(self, value: str | UID | DBRef):
         self["value"] = value
+
     @proper_setter(str, '')
     def label(self, value: str):
         ...
@@ -187,8 +204,9 @@ class Source(_Item):
 
 class CreatorRef(_Item):
     """Represent a referrer to a Creator."""
-    def __init__(self, name: str = "", id: UID = None, 
-                role: str = None, label: str = None, **kw):
+
+    def __init__(self, name: str = "", id: UID = None,
+                 role: str = None, label: str = None, **kw):
         super().__init__(**kw)
         self.name = name
         self.id = id
@@ -196,19 +214,23 @@ class CreatorRef(_Item):
             self.role = role
         if label:
             self.label = label
-    
+
     @proper_setter(str)
     def name(self, value: str):
         ...
+
     @property
-    def id(self) -> UID|None:
+    def id(self) -> UID | None:
         return self.get('id', None)
+
     @id.setter
-    def id(self, value: UID|None):
+    def id(self, value: UID | None):
         self['id'] = value
+
     @proper_setter(str, '')
     def label(self, value: str):
         ...
+
     @proper_setter(str, '')
     def role(self, value: str):
         ...
@@ -216,14 +238,16 @@ class CreatorRef(_Item):
 
 class Alias(_Item):
     """Represent an alias for a Creator."""
-    def __init__(self, name: str, label: str=''):
+
+    def __init__(self, name: str, label: str = ''):
         super().__init__()
         self.name = name
         self.label = label
-    
+
     @proper_setter(str)
     def name(self, value: str):
         ...
+
     @proper_setter(str)
     def label(self, value: str):
         ...
@@ -231,14 +255,16 @@ class Alias(_Item):
 
 class Email(_Item):
     """Represent an email."""
+
     def __init__(self, address: str, label: str = None):
         super().__init__()
         self.label = label or ''
         self.address = address
-    
+
     @proper_setter(str)
     def address(self, value: str):
         ...
+
     @proper_setter(str)
     def label(self, value: str):
         ...
@@ -246,17 +272,20 @@ class Email(_Item):
 
 class OrderedItem(_Item):
     """Represent an item with an order."""
+
     def __init__(self, order: int):
         super().__init__()
         self.order = order
-    
+
     @proper_setter(int)
     def order(self, value: int):
         ...
 
+
 class FrameInfo(OrderedItem):
     """Represent a frame info."""
-    def __init__(self, order: int, title: str, id: UID, duration: float=0.0):
+
+    def __init__(self, order: int, title: str, id: UID, duration: float = 0.0):
         """
         * `order`: the order of the frame.
         * `title`: the title of the frame.
@@ -271,12 +300,15 @@ class FrameInfo(OrderedItem):
     @proper_setter(str)
     def title(self, value: str):
         ...
+
     @proper_setter(float)
     def duration(self, value: float):
         ...
+
     @proper_setter(UID)
     def id(self, value: UID):
         ...
+
 
 class Dimensions(_Item):
     """Represent a Dimensions.
@@ -284,18 +316,21 @@ class Dimensions(_Item):
     * `vector` is whether the image is vector or not. If True, 
     `width` and `height` are ratios.
     """
+
     def __init__(self, width: int, height: int, vector: bool = False):
         super().__init__()
         self.width = width
         self.height = height
         self.vector = vector
-    
+
     @proper_setter(int)
     def width(self, value: int):
         ...
+
     @proper_setter(int)
     def height(self, value: int):
         ...
+
     @proper_setter(bool)
     def vector(self, value: bool):
         ...
@@ -308,23 +343,27 @@ class Geo(_Item):
         point = "Point"
         """A point."""
     _types_map = {"Point": types.point}
-    def __init__(self, type: types|str, coordinates: list[float]):
+
+    def __init__(self, type: types | str, coordinates: list[float]):
         super().__init__()
         self.type = type  # type: ignore
         self.coordinates = coordinates
-    
+
     @property
     def type(self) -> types:
         return self._types_map[self["type"]]
+
     @type.setter
-    def type(self, value: types|str):
+    def type(self, value: types | str):
         if isinstance(value, str):
             value = self._types_map[value]
         self["type"] = value.value
+
     @proper_setter(list[float])
     def coordinates(self, value: list[float]):
         """Longitude & Latitude."""
         ...
+
 
 class Pixiv(_Item):
     """
@@ -340,8 +379,9 @@ class Pixiv(_Item):
         ugoira = 2
         novel = 3
     _types_map = (types.illust, types.manga, types.ugoira, types.novel)
-    def __init__(self, pid: int = None, uid: int = None, type: types|int|None = None, 
-                next: int = None, prev: int = None, original: bool = None,):
+
+    def __init__(self, pid: int = None, uid: int = None, type: types | int | None = None,
+                 next: int = None, prev: int = None, original: bool = None,):
         super().__init__()
         if pid is not None:
             self.pid = pid
@@ -355,27 +395,33 @@ class Pixiv(_Item):
             self.next = next
         if prev is not None:
             self.prev = prev
-    
+
     @proper_setter(int)
     def pid(self, value: int):
         ...
+
     @proper_setter(int)
     def uid(self, value: int):
         ...
+
     @proper_setter(bool)
     def original(self, value: bool):
         ...
+
     @property
     def type(self) -> types:
         return self._types_map[self["type"]]
+
     @type.setter
-    def type(self, value: types|int):
+    def type(self, value: types | int):
         if isinstance(value, int):
             value = self._types_map[value]
         self["type"] = value.value
+
     @proper_setter(int)
     def next(self, value: int):
         ...
+
     @proper_setter(int)
     def prev(self, value: int):
         ...
@@ -390,10 +436,11 @@ class _RichItem(_Item):
     specifying which collection it belongs to
     * `tags` List of tag names
     """
+
     def __init__(
-        self, _id: UID, saved_time: datetime=None, last_modified: datetime=None,
-        ancestors: list[list[UID]]=None, tags: list[str]=None, archived: bool=False,
-        **kw):
+            self, _id: UID, saved_time: datetime = None, last_modified: datetime = None,
+            ancestors: list[list[UID]] = None, tags: list[str] = None, archived: bool = False,
+            **kw):
         super().__init__(**kw)
         self._id = _id
         self.archived = archived
@@ -401,21 +448,27 @@ class _RichItem(_Item):
         self.last_modified = last_modified or datetime.utcnow()
         self.ancestors = ancestors or []
         self.tags = tags or []
+
     @proper_setter(UID)
     def _id(self, value: UID):
         ...
+
     @proper_setter(bool)
     def archived(self, value: bool):
         ...
+
     @proper_setter(datetime)
     def saved_time(self, value: datetime):
         ...
+
     @proper_setter(datetime)
     def last_modified(self, value: datetime):
         ...
+
     @proper_setter(list[UID], is_list=True)
     def ancestors(self, value: list[list[UID]]):
         ...
+
     @proper_setter(str, is_list=True)
     def tags(self, value: list[str]):
         ...
@@ -443,18 +496,20 @@ class Picture(_RichItem):
         frame = 2
         cg = 3
         photo = 4
-    _types_map = (types.illust, types.manga, types.frame, types.cg, types.photo)
+    _types_map = (types.illust, types.manga,
+                  types.frame, types.cg, types.photo)
+
     def __init__(
-        self, title: str, type: types|int, creator: CreatorRef, _id: UID,
-        caption: str='', sauce: str='', rating: float=3.0,albums: list[UID]=None,
-        created_time: datetime=None, pixiv: Pixiv=None, archived:bool=False,
-        frame_info: FrameInfo=None, src: list[Source]=None, dims: Dimensions=None,
-        geo: Geo=None, saved_time: datetime=None, last_modified: datetime=None,
-        ancestors: list[list[UID]]=None, tags: list[str]=None, **kw
-        ):
+        self, title: str, type: types | int, creator: CreatorRef, _id: UID,
+        caption: str = '', sauce: str = '', rating: float = 3.0, albums: list[UID] = None,
+        created_time: datetime = None, pixiv: Pixiv = None, archived: bool = False,
+        frame_info: FrameInfo = None, src: list[Source] = None, dims: Dimensions = None,
+        geo: Geo = None, saved_time: datetime = None, last_modified: datetime = None,
+        ancestors: list[list[UID]] = None, tags: list[str] = None, **kw
+    ):
         super().__init__(_id, saved_time, last_modified, ancestors, tags, archived, **kw)
         self.title = title
-        self.type = type # type: ignore
+        self.type = type  # type: ignore
         self.creator = creator
         self.albums = albums or []
         self.caption = caption
@@ -469,48 +524,61 @@ class Picture(_RichItem):
             self.frame_info = frame_info
         if geo:
             self.geo = geo
-    
+
     @proper_setter(str)
     def title(self, value: str):
         ...
+
     @property
     def type(self) -> types:
         return self._types_map[self["type"]]
+
     @type.setter
-    def type(self, value: types|int):
+    def type(self, value: types | int):
         if isinstance(value, int):
             value = self._types_map[value]
         self["type"] = value.value
+
     @proper_setter(CreatorRef, dissolve=True)
     def creator(self, value: CreatorRef):
         ...
+
     @proper_setter(UID, is_list=True)
     def albums(self, value: list[UID]):
         ...
+
     @proper_setter(str)
     def caption(self, value: str):
         ...
+
     @proper_setter(str)
     def sauce(self, value: str):
         ...
+
     @proper_setter(float)
     def rating(self, value: float):
         ...
+
     @proper_setter(datetime)
     def created_time(self, value: datetime):
         ...
+
     @proper_setter(Pixiv, dissolve=True)
     def pixiv(self, value: Pixiv):
         ...
+
     @proper_setter(FrameInfo, dissolve=True)
     def frame_info(self, value: FrameInfo):
         ...
+
     @proper_setter(Source, dissolve=True, is_list=True)
     def src(self, value: list[Source]):
         ...
+
     @proper_setter(Dimensions, dissolve=True)
     def dims(self, value: Dimensions):
         ...
+
     @proper_setter(Geo, dissolve=True)
     def geo(self, value: Geo):
         ...
@@ -524,30 +592,35 @@ class Tag(_RichItem):
     * `desc` Description
     * `members` List of DBRefs of members
     """
-    def __init__(self, name: str, _id:UID, aliases: list[Alias]=None,
-            desc: str='', members: list[DBRef]=None,archived:bool=False,
-            saved_time: datetime=None, last_modified: datetime=None,
-            ancestors: list[list[UID]]=None, cover: Source=None, **kw):
+
+    def __init__(self, name: str, _id: UID, aliases: list[Alias] = None,
+                 desc: str = '', members: list[DBRef] = None, archived: bool = False,
+                 saved_time: datetime = None, last_modified: datetime = None,
+                 ancestors: list[list[UID]] = None, cover: Source = None, **kw):
         super().__init__(_id, saved_time, last_modified, ancestors, None, archived, **kw)
         self.name = name
         self.cover = cover or Source(Source.types.unavailable, '')
         self.aliases = aliases or []
         self.desc = desc
         self.members = members or []
-        del self["tags"] # Tags are not allowed for tags
-    
+        del self["tags"]  # Tags are not allowed for tags
+
     @proper_setter(str)
     def name(self, value: str):
         ...
+
     @proper_setter(Source, dissolve=True)
     def cover(self, value: Source):
         ...
+
     @proper_setter(Alias, dissolve=True, is_list=True)
     def aliases(self, value: list[Alias]):
         ...
+
     @proper_setter(str)
     def desc(self, value: str):
         ...
+
     @proper_setter(DBRef, is_list=True)
     def members(self, value: list[DBRef]):
         ...
@@ -571,15 +644,16 @@ class Creator(_RichItem):
     * `death` Death info, if any
     * `works` List of work DBRefs
     """
+
     def __init__(
-        self, name: str, _id:UID, avatar: Source=None, platform: str='', 
-        user_id: str='', homepage: str='', primary: UID=None, gender: str='',
-        sub_identities: list[CreatorRef]=None, emails: list[str]=None,
-        rating: float=3.0, desc: str='', birth: datetime=None, pixiv: Pixiv=None,
-        death: datetime=None, works: list[DBRef]=None, archived:bool=False,
-        saved_time: datetime=None, last_modified: datetime=None,
-        ancestors: list[list[UID]]=None, tags: list[str]=None, **kw
-        ):
+        self, name: str, _id: UID, avatar: Source = None, platform: str = '',
+        user_id: str = '', homepage: str = '', primary: UID = None, gender: str = '',
+        sub_identities: list[CreatorRef] = None, emails: list[str] = None,
+        rating: float = 3.0, desc: str = '', birth: datetime = None, pixiv: Pixiv = None,
+        death: datetime = None, works: list[DBRef] = None, archived: bool = False,
+        saved_time: datetime = None, last_modified: datetime = None,
+        ancestors: list[list[UID]] = None, tags: list[str] = None, **kw
+    ):
         super().__init__(_id, saved_time, last_modified, ancestors, tags, archived, **kw)
         self.name = name
         self.avatar = avatar or Source(Source.types.unavailable, '')
@@ -603,45 +677,59 @@ class Creator(_RichItem):
     @proper_setter(str)
     def name(self, value: str):
         ...
+
     @proper_setter(Source, dissolve=True)
     def avatar(self, value: Source):
         ...
+
     @proper_setter(str)
     def platform(self, value: str):
         ...
+
     @proper_setter(str)
     def user_id(self, value: str):
         ...
+
     @proper_setter(str)
     def homepage(self, value: str):
         ...
+
     @proper_setter(Pixiv, dissolve=True)
     def pixiv(self, value: Pixiv):
         ...
+
     @proper_setter(UID)
     def primary(self, value: UID):
         ...
+
     @proper_setter(CreatorRef, dissolve=True, is_list=True)
     def sub_identities(self, value: list[CreatorRef]):
         ...
+
     @proper_setter(str, is_list=True)
     def emails(self, value: list[str]):
         ...
+
     @proper_setter(float)
     def rating(self, value: float):
         ...
+
     @proper_setter(str)
     def gender(self, value: str):
         ...
+
     @proper_setter(str)
     def desc(self, value: str):
         ...
+
     @proper_setter(datetime)
     def birth(self, value: datetime):
         ...
+
     @proper_setter(datetime)
     def death(self, value: datetime):
         ...
+
     @proper_setter(DBRef, is_list=True)
     def works(self, value: list[DBRef]):
         ...
@@ -664,16 +752,17 @@ class Album(_RichItem):
         picture = 0
         music = 1
     _types_map = (types.picture, types.music)
+
     def __init__(
-        self, title: str, type: types|int, creators: list[CreatorRef],
-        _id:UID, cover: Source=None, desc: str='', rating: float=3.0, 
-        pixiv: Pixiv=None, members: list[UID]=None, created_time: datetime=None,
-        saved_time: datetime=None, last_modified: datetime=None,
-        ancestors: list[list[UID]]=None, tags: list[str]=None, archived:bool=False,
-        **kw):
+            self, title: str, type: types | int, creators: list[CreatorRef],
+            _id: UID, cover: Source = None, desc: str = '', rating: float = 3.0,
+            pixiv: Pixiv = None, members: list[UID] = None, created_time: datetime = None,
+            saved_time: datetime = None, last_modified: datetime = None,
+            ancestors: list[list[UID]] = None, tags: list[str] = None, archived: bool = False,
+            **kw):
         super().__init__(_id, saved_time, last_modified, ancestors, tags, archived, **kw)
         self.title = title
-        self.type = type # type: ignore
+        self.type = type  # type: ignore
         self.creators = creators
         self.cover = cover or Source(Source.types.unavailable, '')
         self.desc = desc
@@ -686,32 +775,41 @@ class Album(_RichItem):
     @proper_setter(str)
     def title(self, value: str):
         ...
+
     @property
     def type(self) -> types:
         return self._types_map[self["type"]]
+
     @type.setter
-    def type(self, value: types|int):
+    def type(self, value: types | int):
         if isinstance(value, int):
             value = self._types_map[value]
         self["type"] = value.value
+
     @proper_setter(CreatorRef, dissolve=True, is_list=True)
     def creators(self, value: list[CreatorRef]):
         ...
+
     @proper_setter(Source, dissolve=True)
     def cover(self, value: Source):
         ...
+
     @proper_setter(str)
     def desc(self, value: str):
         ...
+
     @proper_setter(float)
     def rating(self, value: float):
         ...
+
     @proper_setter(Pixiv, dissolve=True)
     def pixiv(self, value: Pixiv):
         ...
+
     @proper_setter(UID, is_list=True)
     def members(self, value: list[UID]):
         ...
+
     @proper_setter(datetime)
     def created_time(self, value: datetime):
         ...
@@ -734,13 +832,15 @@ class Binary(_RichItem):
         video = 2
         exe = 3
         zip = 4
-    _types_map = (types.general, types.image, types.video, types.exe, types.zip)
+    _types_map = (types.general, types.image,
+                  types.video, types.exe, types.zip)
+
     def __init__(
-        self, name: str, type: types|int, value: bytes, _id:UID, desc: str='',
-        created_time: datetime=None, refs: list[DBRef]=None, md5: str='',
-        saved_time: datetime=None, last_modified: datetime=None, 
-        ancestors: list[list[UID]]=None, tags: list[str]=None, archived:bool=False,
-        **kw):
+            self, name: str, type: types | int, value: bytes, _id: UID, desc: str = '',
+            created_time: datetime = None, refs: list[DBRef] = None, md5: str = '',
+            saved_time: datetime = None, last_modified: datetime = None,
+            ancestors: list[list[UID]] = None, tags: list[str] = None, archived: bool = False,
+            **kw):
         super().__init__(_id, saved_time, last_modified, ancestors, tags, archived, **kw)
         self.name = name
         self.type = type  # type: ignore
@@ -749,33 +849,41 @@ class Binary(_RichItem):
         self.value = value
         self.refs = refs or []
         self.md5 = md5 or hashlib.md5(value).hexdigest()
-    
+
     @proper_setter(str)
     def name(self, value: str):
         ...
+
     @property
     def type(self) -> types:
         return self._types_map[self["type"]]
+
     @type.setter
-    def type(self, value: types|int):
+    def type(self, value: types | int):
         if isinstance(value, int):
             value = self._types_map[value]
         self["type"] = value.value
+
     @proper_setter(str)
     def desc(self, value: str):
         ...
+
     @proper_setter(datetime)
     def created_time(self, value: datetime):
         ...
+
     @proper_setter(DBRef, is_list=True)
     def refs(self, value: list[DBRef]):
         ...
+
     @proper_setter(str)
     def md5(self, value: str):
         ...
+
     @property
     def value(self) -> bytes:
         return self["value"]
+
     @value.setter
     def value(self, value: bytes):
         self["value"] = value
@@ -795,13 +903,14 @@ class Collection(_RichItem):
     class types(Enum):
         general = 0
     _types_map = (types.general,)
+
     def __init__(
-        self, name: str, _id:UID, type: types|int, cover: Source=None, desc: str='',
-        members: list[DBRef]=None, created_time: datetime=None, 
-        saved_time: datetime=None, last_modified: datetime=None, 
-        ancestors: list[list[UID]]=None, tags: list[str]=None, 
-        archived:bool=False, **kw
-        ):
+        self, name: str, _id: UID, type: types | int, cover: Source = None, desc: str = '',
+        members: list[DBRef] = None, created_time: datetime = None,
+        saved_time: datetime = None, last_modified: datetime = None,
+        ancestors: list[list[UID]] = None, tags: list[str] = None,
+        archived: bool = False, **kw
+    ):
         super().__init__(_id, saved_time, last_modified, ancestors, tags, archived, **kw)
         self.name = name
         self.type = type  # type: ignore
@@ -813,31 +922,37 @@ class Collection(_RichItem):
     @proper_setter(str)
     def name(self, value: str):
         ...
+
     @property
     def type(self) -> types:
         return self._types_map[self["type"]]
+
     @type.setter
-    def type(self, value: types|int):
+    def type(self, value: types | int):
         if isinstance(value, int):
             value = self._types_map[value]
         self["type"] = value.value
+
     @proper_setter(Source, dissolve=True)
     def cover(self, value: Source):
         ...
+
     @proper_setter(str)
     def desc(self, value: str):
         ...
+
     @proper_setter(DBRef, is_list=True)
     def members(self, value: list[DBRef]):
         ...
+
     @proper_setter(datetime)
     def created_time(self, value: datetime):
         ...
 
 
 class Trash(_Item):
-    def __init__(self, ref: DBRef, birth: datetime, death:datetime,
-        value:dict, _id: UID=None, **kw):
+    def __init__(self, ref: DBRef, birth: datetime, death: datetime,
+                 value: dict, _id: UID = None, **kw):
         super().__init__(**kw)
         self._id = _id or UID()
         self.ref = ref
@@ -848,12 +963,15 @@ class Trash(_Item):
     @proper_setter(DBRef)
     def ref(self, value: DBRef):
         ...
+
     @proper_setter(datetime)
     def birth(self, value: datetime):
         ...
+
     @proper_setter(datetime)
     def death(self, value: datetime):
         ...
+
     @proper_setter(dict)
     def value(self, value: dict):
         ...
@@ -863,7 +981,7 @@ class Shelf(ABC):
     @abstractmethod
     async def get(self, _id):
         """Get by _id"""
-    
+
     @abstractmethod
     async def contains(self, _id) -> bool:
         """Check if _id exists"""
@@ -871,7 +989,7 @@ class Shelf(ABC):
     @abstractmethod
     async def upsert(self, doc):
         """upsert a document"""
-    
+
     @abstractmethod
     async def delete(self, _id):
         """Move a document to trash"""
@@ -890,7 +1008,7 @@ class AlbumShelf(Shelf):
     async def get_by_pid(self, pid) -> Any:
         """Get by Pixiv ID"""
     @abstractmethod
-    async def pid_to_id(self, pid) -> UID|None:
+    async def pid_to_id(self, pid) -> UID | None:
         """Get _id by Pixiv ID"""
 
 
@@ -899,7 +1017,7 @@ class CreatorShelf(Shelf):
     async def get_by_uid(self, uid) -> Any:
         """Get by Pixiv user ID"""
     @abstractmethod
-    async def uid_to_id(self, uid) -> UID|None:
+    async def uid_to_id(self, uid) -> UID | None:
         """Get _id by Pixiv user ID"""
 
 
@@ -908,7 +1026,7 @@ class TagShelf(Shelf):
     async def get_by_name(self, tname) -> Any:
         """Get by tag name"""
     @abstractmethod
-    async def name_to_id(self, tname) -> UID|None:
+    async def name_to_id(self, tname) -> UID | None:
         """Get _id by tag name"""
 
 
@@ -916,7 +1034,7 @@ class Library(ABC):
     @abstractmethod
     def get_shelf(self, name) -> Shelf:
         ...
-    
+
     @abstractmethod
     async def close(self):
         ...
@@ -929,26 +1047,32 @@ class Library(ABC):
     @abstractmethod
     def Pictures(self) -> Shelf:
         ...
+
     @property
     @abstractmethod
     def Creators(self) -> CreatorShelf:
         ...
+
     @property
     @abstractmethod
     def Albums(self) -> AlbumShelf:
         ...
+
     @property
     @abstractmethod
     def Tags(self) -> TagShelf:
         ...
+
     @property
     @abstractmethod
     def Binaries(self) -> Shelf:
         ...
+
     @property
     @abstractmethod
     def Collections(self) -> Shelf:
         ...
+
     @property
     @abstractmethod
     def Trashbin(self):

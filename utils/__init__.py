@@ -24,7 +24,6 @@ __all__ = [
     "real_path",
     "version_cmp",
     "wipe_line",
-    "validate_json",
     "to_ordinal",
     "with_typehint",
     "sync_await",
@@ -46,7 +45,7 @@ def str_to_class(class_name: str, module: str = "__main__") -> type:
 
 def real_dir(file: str = None) -> str:
     try:
-        file = getattr(sys.modules["__main__"], "__file__") if file is None else file
+        file = file or sys.modules["__main__"].__file__ or ''
     except AttributeError:
         file = ''
     return os.path.dirname(os.path.realpath(file))
@@ -74,18 +73,10 @@ def version_cmp(v1:str, v2:str):
 def wipe_line():
     print('\r' + ' ' * (os.get_terminal_size().columns), end = '\r')
 
-def validate_json(data: str) -> bool:
-    try:
-        json.loads(data)
-        return True
-    except Exception as e:
-        return False
-
 def to_ordinal(num: int) -> str:
     if num % 100 in [11, 12, 13]:
         return f"{num}th"
-    else:
-        return f"{num}{['th', 'st', 'nd', 'rd'][num % 10 if num % 10 < 4 else 0]}"
+    return f"{num}{['th', 'st', 'nd', 'rd'][num % 10 if num % 10 < 4 else 0]}"
 
 def sync_await(coro: Awaitable[T], loop: asyncio.AbstractEventLoop=None) -> T:
     loop = loop or asyncio.get_event_loop()
@@ -96,11 +87,11 @@ def merge_ancestors(ancestors: Iterable[list]):
     familytree = list(ancestors)
     if len(familytree) <= 1:
         return familytree or [[]]
-    familytree.sort(key = lambda x: len(x))
-    for i in range(len(familytree)):
-        for j in range(i + 1, len(familytree)):
-            if set(familytree[i]).issubset(set(familytree[j])):
-                familytree.remove(familytree[i])
+    familytree.sort(key = len)
+    for i, branch in enumerate(familytree):
+        for other in familytree[i+1:]:
+            if set(branch).issubset(set(other)):
+                familytree.remove(branch)
                 break
     return familytree
 
@@ -191,8 +182,7 @@ def with_typehint(baseclass: Type[T]):
 def ensure_async(func: Callable[..., Any]) -> Callable[..., Awaitable[Any]]:
     if asyncio.iscoroutinefunction(func):
         return func
-    else:
-        return to_async(func)
+    return to_async(func)
 
 #### quart.utils ####
 
@@ -212,8 +202,7 @@ def to_async(func: Callable[..., Any]) -> Callable[..., Awaitable[Any]]:
         )
         if inspect.isgenerator(result):
             return to_async_iter(result)
-        else:
-            return result
+        return result
 
     return _wrapper
 

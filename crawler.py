@@ -83,9 +83,11 @@ class Bookmarks:
             await self._build_cache(0)
         return self._total
 
-    async def __aiter__(self):
-        for i in range(await self.total()):
-            yield await self.at(i)
+    def __aiter__(self):
+        async def iterator():
+            for i in range(await self.total()):
+                yield await self.at(i)
+        return iterator()
 
 
 class PixivCrawler:
@@ -352,7 +354,6 @@ class PixivCrawler:
     async def construct_album(self, _id: proto.UID, data: ObjDict) -> td.Album:
         """### Construct an Album from raw data"""
         self._logger.info(f"Constructing album {data.id}")
-        #data.default = None
         series = data.seriesNavData
         _prev = int(series.prev.id) if series and series.prev else None
         _next = int(series.next.id) if series and series.next else None
@@ -380,7 +381,6 @@ class PixivCrawler:
         filename = filename_0.replace("_p0", f"_p{page}")
         url = data.urls.original.replace(filename_0, filename)
         self._logger.info(f"Constructing work {pid} page {page}")
-        #data.default = None
         series = data.seriesNavData
         _prev = int(series.prev.id) if series and series.prev else None
         _next = int(series.next.id) if series and series.next else None
@@ -587,10 +587,9 @@ class PixivCrawler:
                     if objd.error:
                         raise ValueError(f"{url} Error: "+objd.message)
                     return ObjDict(objd["body"])
-                else:
-                    self._logger.warning(
-                        f"Request {method} {url} failed: {ret.status_code}")
-                    ret.raise_for_status()
+                self._logger.warning(
+                    f"Request {method} {url} failed: {ret.status_code}")
+                ret.raise_for_status()
             except Exception as e:
                 self._logger.error(f"Request {method} {url} failed:")
                 self._logger.exception(e)

@@ -37,6 +37,7 @@ class ObjDict(dict[str, _T]):
            if you want to use the same ObjDict object in multiple places,
            you can pass a dict to `antiloop_map` to avoid infinite loop
         '''
+        super().__init__()
         self.__dict__["_antiloop_map"] = {
         } if antiloop_map is None else antiloop_map  # for reference loop safety
         self.__dict__["_default"] = default
@@ -64,20 +65,18 @@ class ObjDict(dict[str, _T]):
         if isinstance(v, dict):
             if id(v) in self._antiloop_map:
                 return self._antiloop_map[id(v)]
-            elif isinstance(v, ObjDict):
+            if isinstance(v, ObjDict):
                 if v.default is not self.default:
                     v.default = self.default
                 return v
-            else:
-                return ObjDict(v, default=self.default, antiloop_map=self._antiloop_map)
-        elif isinstance(v, list):
+            return ObjDict(v, default=self.default, antiloop_map=self._antiloop_map)
+        if isinstance(v, list):
             return [self._convert(i) for i in v]
-        elif isinstance(v, tuple):
+        if isinstance(v, tuple):
             return tuple(self._convert(i) for i in v)
-        elif isinstance(v, set):
-            return set(self._convert(i) for i in v)
-        else:
-            return v
+        if isinstance(v, set):
+            return {self._convert(i) for i in v}
+        return v
 
     @property
     def default(self):
@@ -102,8 +101,7 @@ class ObjDict(dict[str, _T]):
     def __eq__(self, other):
         if isinstance(other, ObjDict):
             return dict(self) == dict(other)
-        else:
-            return super().__eq__(other)
+        return super().__eq__(other)
 
     def __getattr__(self, name: str) -> Any:
         try:
@@ -126,11 +124,10 @@ class ObjDict(dict[str, _T]):
     def __getitem__(self, name: str) -> _T:
         if name in self:
             return self.get(name)  # type: ignore
-        elif self.default is ObjDict.NotExist:
+        if self.default is ObjDict.NotExist:
             raise KeyError(f"{name} not found in {self}")
-        else:
-            self[name] = deepcopy(self.default)
-            return self[name]
+        self[name] = deepcopy(self.default)
+        return self[name]
 
     def __deepcopy__(self, memo: Dict[int, Any]):
         copy: ObjDict[_T] = ObjDict({}, recursive=self.__dict__["_recursive"], default=self.default)
@@ -138,3 +135,5 @@ class ObjDict(dict[str, _T]):
         dummy = deepcopy(dict(self), memo)
         copy.update(dummy)
         return copy
+
+    __hash__ = None  # type: ignore

@@ -20,7 +20,8 @@ from typing import Any
 from bson.dbref import DBRef
 from bson.objectid import ObjectId
 
-def json_convert(obj: Any, memo: dict[int, Any]=None) -> Any:
+
+def json_convert(obj: Any, memo: dict[int, Any] = None) -> Any:
     """Recursive helper method that converts extended types so they can be
     converted into json.
     """
@@ -34,7 +35,7 @@ def json_convert(obj: Any, memo: dict[int, Any]=None) -> Any:
         memo[_id] = dummyd  # So we don't recurse infinitely
         dummyd.update((k, json_convert(v, memo)) for k, v in obj.items())
         return dummyd
-    elif hasattr(obj, "__iter__") and not isinstance(obj, (str, bytes)):
+    if hasattr(obj, "__iter__") and not isinstance(obj, (str, bytes)):
         dummyl: list[Any] = []
         memo[_id] = dummyl  # So we don't recurse infinitely
         dummyl.extend((json_convert(v, memo) for v in obj))
@@ -46,14 +47,16 @@ def json_convert(obj: Any, memo: dict[int, Any]=None) -> Any:
     except TypeError:
         return obj
 
+
 def r_recover(obj: Any) -> Any:
     """Recursively recover extended types."""
     if isinstance(obj, list):
-        return list((r_recover(v) for v in obj))
+        return [r_recover(v) for v in obj]
     if isinstance(obj, dict):
         rec = {k: r_recover(v) for k, v in obj.items()}
         return recover(rec)
     return obj
+
 
 def convert(obj: Any) -> Any:
     # We preserve key order when rendering SON, DBRef, etc. as JSON by
@@ -69,6 +72,7 @@ def convert(obj: Any) -> Any:
     if isinstance(obj, uuid.UUID):
         return {"$uuid": obj.hex}
     raise TypeError(f"Not in converting list: {obj}")
+
 
 def recover(dct: dict[str, Any]) -> Any:
     if "$oid" in dct:
@@ -87,38 +91,44 @@ def recover(dct: dict[str, Any]) -> Any:
         return _parse_uuid(dct)
     return dct
 
+
 def _parse_uuid(doc: Any) -> uuid.UUID:
     """Decode a JSON $uuid to Python UUID."""
     if len(doc) != 1:
-        raise TypeError("Bad $uuid, extra field(s): %s" % (doc,))
+        raise TypeError(f"Bad $uuid, extra field(s): {doc}")
     if not isinstance(doc["$uuid"], str):
-        raise TypeError("$uuid must be a string: %s" % (doc,))
+        raise TypeError(f"$uuid must be a string: {doc}")
     return uuid.UUID(doc["$uuid"])
+
 
 def _parse_binary(doc: Any) -> bytes:
     b64 = doc["$binary"]
     if not isinstance(b64, str):
-        raise TypeError("$binary base64 must be a string: %s" % (doc,))
+        raise TypeError(f"$binary base64 must be a string: {doc}")
 
     return base64.b64decode(b64.encode())
+
 
 def _parse_datetime(doc: Any) -> datetime.datetime:
     """Decode a JSON datetime to python datetime.datetime."""
     dtm = doc["$date"]
     if len(doc) != 1:
-        raise TypeError("Bad $date, extra field(s): %s" % (doc,))
-    
+        raise TypeError(f"Bad $date, extra field(s): {doc}")
+
     return datetime.datetime.fromisoformat(dtm)
+
 
 def _parse_canonical_oid(doc: Any) -> ObjectId:
     """Decode a JSON ObjectId to bson.objectid.ObjectId."""
     if len(doc) != 1:
-        raise TypeError("Bad $oid, extra field(s): %s" % (doc,))
+        raise TypeError(f"Bad $oid, extra field(s): {doc}")
     return ObjectId(doc["$oid"])
+
 
 def _parse_canonical_dbref(doc: Any) -> DBRef:
     """Decode a JSON DBRef to bson.dbref.DBRef."""
     return DBRef(doc.pop("$ref"), doc.pop("$id"), database=doc.pop("$db", None), **doc)
+
 
 def _encode_binary(data: bytes) -> Any:
     return {"$binary": base64.b64encode(data).decode()}

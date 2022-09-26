@@ -151,8 +151,7 @@ class MonoLogger:
     def getLogger(name: str) -> MonoLogger:
         if name in MonoLogger._logger_map:
             return MonoLogger._logger_map[name]
-        else:
-            return MonoLogger(name)
+        return MonoLogger(name)
 
     def __del__(self):
         self._debug_hdlr.close()

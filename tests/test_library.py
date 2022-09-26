@@ -73,7 +73,7 @@ def test_proto_item():
     assert item["int"] == 12345
     assert "int" in item
     del item["int"]
-    assert [i for i in item] == ["float", "str"]
+    assert list(item) == ["float", "str"]
 
 def test_proto_source():
     Source = proto.Source

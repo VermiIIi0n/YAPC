@@ -5,6 +5,7 @@
 """
 
 import os
+import sys
 import argparse
 import asyncio
 import types
@@ -41,11 +42,11 @@ async def migrate(args: argparse.Namespace):
     """
     if not args.to:
         print("Please specify the destination database.")
-        exit(1)
+        sys.exit(1)
 
     if args.to == args.database:
         print("Please specify a different destination database.")
-        exit(1)
+        sys.exit(1)
 
     # Determine DB types
     if args.database.lower().startswith("mongodb"):
@@ -57,7 +58,7 @@ async def migrate(args: argparse.Namespace):
                           indent=args.indent, ensure_ascii=args.ensure_ascii)
     else:
         print("Unknown database type.")
-        exit(1)
+        sys.exit(1)
 
     if args.to.lower().startswith("mongodb"):
         tt: types.ModuleType = mg
@@ -65,22 +66,21 @@ async def migrate(args: argparse.Namespace):
     elif args.to.lower().endswith(".json"):
         if os.path.exists(args.to):
             print("Destination database already exists.")
-            exit(1)
+            sys.exit(1)
         tt = tn
         libt = tn.Library(args.to,
                           indent=args.indent, ensure_ascii=args.ensure_ascii)
     else:
         print("Unknown database type.")
-        exit(1)
+        sys.exit(1)
 
     print(f"Migrating from {args.database} to {args.to}")
 
     if tt == ft:
         if tt is tn:
-            with open(args.database, 'r') as r:
-                with open(args.to, 'w') as f:
-                    f.write(r.read())
-            exit(0)
+            with open(args.database, 'r') as r, open(args.to, 'w') as f:
+                f.write(r.read())
+            sys.exit(0)
         if tt is mg:
             ...
 
@@ -146,7 +146,7 @@ async def check(args: argparse.Namespace, repair: int = 0):
                          indent=args.indent, ensure_ascii=args.ensure_ascii)
     else:
         print("Unknown database type.")
-        exit(1)
+        sys.exit(1)
 
     async def checkDBRef(ref: pt.DBRef, lib: pt.Library):
         try:
@@ -182,7 +182,7 @@ async def check(args: argparse.Namespace, repair: int = 0):
             return 204
         if len(creators) != len(set(creators)):
             return 205
-        if len(set(i.name for i in creators)) != len(creators):
+        if len({i.name for i in creators}) != len(creators):
             return 206
         return 0
 
@@ -211,13 +211,16 @@ async def check(args: argparse.Namespace, repair: int = 0):
         if source.type not in config.source_types:
             return 102
         if source.type == source.types.url:
-            assert isinstance(source.value, str)
+            if not isinstance(source.value, str):
+                raise TypeError("URL value must be a string.")
             if not source.value.startswith("http"):
                 return 102
         elif source.type == source.types.filename:
-            assert isinstance(source.value, str)
+            if not isinstance(source.value, str):
+                raise TypeError("Filename must be a string.")
         elif source.type == source.types.bin:
-            assert isinstance(source.value, pt.UID)
+            if not isinstance(source.value, pt.UID):
+                raise TypeError("Source value must be a UID when type is bin.")
             if await lib.Binaries.get(source.value) is None:
                 return 214
         return 0

@@ -34,7 +34,7 @@ if not os.path.exists(real_path("./config.yaml")):
         with open(real_path("./config.yaml"), "w") as f2:
             f2.write(_c)
     print(" Config file 'config.yaml' generated. Please edit it before running again.")
-    exit(0)
+    sys.exit(0)
 
 # Make dirs
 if not os.path.exists(real_path("./data")):
@@ -127,12 +127,13 @@ if config.notification.enable:
 
     def uncaught_exc(exc_type, exc_value, exc_traceback):
         """A helper function to catch uncaught exceptions."""
-        logger.exception("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+        logger.exception("Uncaught exception", exc_info=(
+            exc_type, exc_value, exc_traceback))
         logger.join()
         if on_failure:
             for n in notifiers:
                 n.on_failure(exc_type, exc_value, exc_traceback, config)
-    
+
     sys.excepthook = uncaught_exc
 
     def notify_success(*args):
@@ -146,12 +147,13 @@ else:
 ##################################################
 ###################### Main ######################
 
+
 async def main():
     with open(real_path("./meta.json")) as f:
         meta = ObjDict(json.load(f))
         if args.version:
             print(meta.version)
-            exit(0)
+            sys.exit(0)
         try:
             r = httpx.get(f"https://raw.githubusercontent.com/{meta.author}/YAPC/{meta.branch}/meta.json",
                           proxies=proxies)
@@ -171,8 +173,7 @@ async def main():
             r_cookies: dict[str, str] = json.load(f)
             cookies = s2j(r_cookies)
             r = httpx.get("https://www.pixiv.net/setting_user.php",
-                          follow_redirects=False, cookies=cookies,
-                          timeout=20, retry=20,
+                          follow_redirects=False, cookies=cookies, timeout=20,
                           headers=config.puller.headers, proxies=proxies)
             if r.status_code != 200:
                 logger.debug(f"return code {r.status_code}\n"+r.text)
@@ -249,14 +250,14 @@ async def main():
         repo.git.add(path)
         try:
             repo.git.commit("-m", f"Update: {datetime.now().date()}")
-        except Exception as e:
+        except git.GitCommandError as e:
             if "Your branch is up to date" not in str(e):
                 raise e  # Raise if not "nothing to commit"
 
         if config.git.remote:
             try:
                 repo.delete_remote("lib")
-            except:
+            except git.GitCommandError:
                 ...
             repo.create_remote("lib", config.git.remote)
             repo.git.push("-u", "lib", "master")
@@ -266,6 +267,7 @@ async def main():
 
 #################### End Main ####################
 ##################################################
+
 
 def show_progress(crawler: PixivCrawler):
     """A helper function to show progress of the crawler."""
@@ -322,7 +324,7 @@ def login(username: str = '', password: str = '') -> list[dict[str, str]]:
         time.sleep(1)
         raw = driver.get_cookies()
         t = 0
-        while "first_visit_datetime_pc" not in set(r["name"] for r in raw):
+        while "first_visit_datetime_pc" not in {r["name"] for r in raw}:
             time.sleep(0.5)
             raw = driver.get_cookies()
             t += 1

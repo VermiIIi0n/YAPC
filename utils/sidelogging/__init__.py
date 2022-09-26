@@ -31,6 +31,7 @@ class LoggerLike(Protocol):
 class SideLogger(Thread):
     """### SideLogger: Wraps a logger to log in a separate thread.
     * Use with caution when logging to console."""
+
     def __init__(self, logger: LoggerLike, heartbeat: float = 0.01) -> None:
         Thread.__init__(self)
         self._heartbeat = heartbeat
@@ -42,7 +43,7 @@ class SideLogger(Thread):
 
     def _filter_subscribers(self) -> None:
         with self._subs_lock:
-            self._subscribers = list(s for s in self._subscribers if s.is_alive())
+            self._subscribers = [s for s in self._subscribers if s.is_alive()]
 
     def run(self) -> None:
         while True:
@@ -76,7 +77,7 @@ class SideLogger(Thread):
 
     def info(self, *args, **kw):
         self._log(self._logger.info, *args, **kw)
-    
+
     def warning(self, *args, **kw):
         self._log(self._logger.warning, *args, **kw)
 
@@ -90,14 +91,17 @@ class SideLogger(Thread):
         if "exc_info" not in kw:
             kw["exc_info"] = err
         self._log(self._logger.exception, err, *args, **kw)
-    
+
     def join(self, timeout: float = None) -> None:
         """Wait for logger thread to finish. """
         with self._join_lock:
             if self.is_alive():
                 self._queue.put(-1)
-            self._queue.join() if timeout is None else Thread.join(self, timeout)
-    
+            if timeout is None:
+                self._queue.join()
+            else:
+                Thread.join(self, timeout)
+
     @property
     def logger(self) -> LoggerLike:
         return self._logger
