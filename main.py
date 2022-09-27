@@ -1,6 +1,5 @@
 """Command interface for YAPC."""
 
-from datetime import datetime
 import os
 import sys
 import asyncio
@@ -12,6 +11,7 @@ import time
 import pullers
 import git
 import notification as notify
+from datetime import datetime
 from urllib.request import getproxies
 from getpass import getpass
 from selenium import webdriver
@@ -142,7 +142,7 @@ if config.notification.enable:
                 n.on_success(*args, config)
 else:
     def notify_success(*args):
-        ...
+        ...  # Do nothing when notification is disabled
 
 ##################################################
 ###################### Main ######################
@@ -164,7 +164,7 @@ async def main():
                       f" Currenct version: {meta.version}\n" +
                       f" Latest version: {r.version}\n" +
                       "**********************************\n")
-        except Exception:
+        except Exception:  # skipcq: PYL-W0703
             print("Failed to check for updates.")
 
     cookies_path = real_path("./data/cookies.json")

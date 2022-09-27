@@ -21,9 +21,20 @@ YAPC is designed to automatically download your bookmarks from Pixiv with extra 
 
 If you run into any problems, maybe you should check out [this.](#Common-Questions)
 
+Version Notes:
+
 * v0.1.0: YAPC is not considered stable yet
 
-### Quick Start
+### Hierarchy
+
+![Structure](./imgs/YAPC.svg)
+
+### Usage
+
+1. [Preparation](#Preparation)
+2. [Configuration](#Config)
+3. [Ready-to-go](#Running)
+4. [Extra Features](#Advanced)
 
 #### Preparation
 
@@ -122,7 +133,7 @@ python main.py --stop -1
 
 To view more options, run `python main.py --help`.
 
-###### Get Cookies From Browser
+###### Get Cookies Via Selenium
 
 When `Cookies` do not exist or are expired, your browser should pop up and automatically log in for you. (Assuming you have configured username/password and the webdriver mentioned above). Sometimes you have to get through that annoying Recaptcha manually.
 
@@ -134,24 +145,48 @@ In a successful run, you should see this.
 
 <img src="./imgs/prog.png" alt="Running" style="zoom:67%;" align="left" />
 
-Library(aka the database) digests will be printed twice, before and after crawling.
+***Library(aka the database) digests will be printed twice, before and after crawling. If you don't see the second one, then it's likely something went wrong. Check the error log for further information.***
+
+### Advanced
+
+#### Git Version Control
+
+When using `tinyend`, set `git.enable` to `true` in your config file, and a git repo will be created under the folder where you keep your database file. Filling `git.remote` with a non-empty value will push updates to that remote.
+
+However, if you are uploading to GitHub, when your file size exceeds 100MB, you will need [git-lfs](https://git-lfs.github.com). 
+
+#### Notification
+
+YAPC can notify you when a task failed to fail or failed successfully.
+
+Currently, only mailgun is supported. To use it, fill in all the required info in the config file and set enable to `true`.
+
+Here are some examples of notifications:
+
+##### Failed to fail
+
+<img src="./imgs/failed2fail.png" alt="failed2fail" style="zoom:50%;" align="left"/>
+
+##### Failed successfully
+
+ <img src="./imgs/failed.png" alt="failed" style="zoom:50%;" align="left"/>
 
 ### Common Questions
 
-> If you cannot eliminate an issue, then eliminate who discovered the issue. 
+> If you cannot eliminate an issue, then eliminate who discovered it. 
 >
 > ​																												---- Commies
 
-* Can't push to GitHub: If your database size exceeds 100MB, [git-lfs](https://git-lfs.github.com) is required to push it.
-* Progress bar is flickering: That's a Windows issue, bear with it or join the almighty *unix family.
+* Can't push to GitHub: If your database size exceeds 100MB, [git-lfs](https://git-lfs.github.com) is required to make it.
+* The progress bar is flickering: That's a Windows issue; bear with it or join the almighty *unix family.
 
-* Well, I don't actually know what are the common questions since I have no samples. 
+* Well, I don't know what's the common questions since I have no samples. 
 
   Please submit an issue if you have any problems not listed here.
 
 ### Backends
 
-There is an extra abstraction layer above database backends, so it's fairly simple to migrate between to backends.
+There is an extra abstraction layer above database backends, so migrating between backends is pretty simple.
 
 #### `tinyend`
 
@@ -173,7 +208,7 @@ python tools.py migrate <database_path> --to <target_database_path>
 
 #### Check Errors In Your Database
 
-**Haven't fully implemented yet**
+**Haven't been fully implemented yet**
 
 ```bash
 python tools.py check <database_path>

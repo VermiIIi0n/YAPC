@@ -198,7 +198,7 @@ class Source(_Item):
         self["value"] = value
 
     @proper_setter(str, '')
-    def label(self, value: str):
+    def label(self):
         ...
 
 
@@ -216,7 +216,7 @@ class CreatorRef(_Item):
             self.label = label
 
     @proper_setter(str)
-    def name(self, value: str):
+    def name(self):
         ...
 
     @property
@@ -228,11 +228,11 @@ class CreatorRef(_Item):
         self['id'] = value
 
     @proper_setter(str, '')
-    def label(self, value: str):
+    def label(self):
         ...
 
     @proper_setter(str, '')
-    def role(self, value: str):
+    def role(self):
         ...
 
 
@@ -245,11 +245,11 @@ class Alias(_Item):
         self.label = label
 
     @proper_setter(str)
-    def name(self, value: str):
+    def name(self):
         ...
 
     @proper_setter(str)
-    def label(self, value: str):
+    def label(self):
         ...
 
 
@@ -262,11 +262,11 @@ class Email(_Item):
         self.address = address
 
     @proper_setter(str)
-    def address(self, value: str):
+    def address(self):
         ...
 
     @proper_setter(str)
-    def label(self, value: str):
+    def label(self):
         ...
 
 
@@ -278,7 +278,7 @@ class OrderedItem(_Item):
         self.order = order
 
     @proper_setter(int)
-    def order(self, value: int):
+    def order(self):
         ...
 
 
@@ -298,15 +298,15 @@ class FrameInfo(OrderedItem):
         self.id = id
 
     @proper_setter(str)
-    def title(self, value: str):
+    def title(self):
         ...
 
     @proper_setter(float)
-    def duration(self, value: float):
+    def duration(self):
         ...
 
     @proper_setter(UID)
-    def id(self, value: UID):
+    def id(self):
         ...
 
 
@@ -324,15 +324,15 @@ class Dimensions(_Item):
         self.vector = vector
 
     @proper_setter(int)
-    def width(self, value: int):
+    def width(self):
         ...
 
     @proper_setter(int)
-    def height(self, value: int):
+    def height(self):
         ...
 
     @proper_setter(bool)
-    def vector(self, value: bool):
+    def vector(self):
         ...
 
 
@@ -360,7 +360,7 @@ class Geo(_Item):
         self["type"] = value.value
 
     @proper_setter(list[float])
-    def coordinates(self, value: list[float]):
+    def coordinates(self):
         """Longitude & Latitude."""
         ...
 
@@ -397,15 +397,15 @@ class Pixiv(_Item):
             self.prev = prev
 
     @proper_setter(int)
-    def pid(self, value: int):
+    def pid(self):
         ...
 
     @proper_setter(int)
-    def uid(self, value: int):
+    def uid(self):
         ...
 
     @proper_setter(bool)
-    def original(self, value: bool):
+    def original(self):
         ...
 
     @property
@@ -419,11 +419,11 @@ class Pixiv(_Item):
         self["type"] = value.value
 
     @proper_setter(int)
-    def next(self, value: int):
+    def next(self):
         ...
 
     @proper_setter(int)
-    def prev(self, value: int):
+    def prev(self):
         ...
 
 
@@ -450,27 +450,27 @@ class _RichItem(_Item):
         self.tags = tags or []
 
     @proper_setter(UID)
-    def _id(self, value: UID):
+    def _id(self):
         ...
 
     @proper_setter(bool)
-    def archived(self, value: bool):
+    def archived(self):
         ...
 
     @proper_setter(datetime)
-    def saved_time(self, value: datetime):
+    def saved_time(self):
         ...
 
     @proper_setter(datetime)
-    def last_modified(self, value: datetime):
+    def last_modified(self):
         ...
 
     @proper_setter(list[UID], is_list=True)
-    def ancestors(self, value: list[list[UID]]):
+    def ancestors(self):
         ...
 
     @proper_setter(str, is_list=True)
-    def tags(self, value: list[str]):
+    def tags(self):
         ...
 
 
@@ -526,7 +526,7 @@ class Picture(_RichItem):
             self.geo = geo
 
     @proper_setter(str)
-    def title(self, value: str):
+    def title(self):
         ...
 
     @property
@@ -540,47 +540,47 @@ class Picture(_RichItem):
         self["type"] = value.value
 
     @proper_setter(CreatorRef, dissolve=True)
-    def creator(self, value: CreatorRef):
+    def creator(self):
         ...
 
     @proper_setter(UID, is_list=True)
-    def albums(self, value: list[UID]):
+    def albums(self):
         ...
 
     @proper_setter(str)
-    def caption(self, value: str):
+    def caption(self):
         ...
 
     @proper_setter(str)
-    def sauce(self, value: str):
+    def sauce(self):
         ...
 
     @proper_setter(float)
-    def rating(self, value: float):
+    def rating(self):
         ...
 
     @proper_setter(datetime)
-    def created_time(self, value: datetime):
+    def created_time(self):
         ...
 
     @proper_setter(Pixiv, dissolve=True)
-    def pixiv(self, value: Pixiv):
+    def pixiv(self):
         ...
 
     @proper_setter(FrameInfo, dissolve=True)
-    def frame_info(self, value: FrameInfo):
+    def frame_info(self):
         ...
 
     @proper_setter(Source, dissolve=True, is_list=True)
-    def src(self, value: list[Source]):
+    def src(self):
         ...
 
     @proper_setter(Dimensions, dissolve=True)
-    def dims(self, value: Dimensions):
+    def dims(self):
         ...
 
     @proper_setter(Geo, dissolve=True)
-    def geo(self, value: Geo):
+    def geo(self):
         ...
 
 
@@ -606,23 +606,23 @@ class Tag(_RichItem):
         del self["tags"]  # Tags are not allowed for tags
 
     @proper_setter(str)
-    def name(self, value: str):
+    def name(self):
         ...
 
     @proper_setter(Source, dissolve=True)
-    def cover(self, value: Source):
+    def cover(self):
         ...
 
     @proper_setter(Alias, dissolve=True, is_list=True)
-    def aliases(self, value: list[Alias]):
+    def aliases(self):
         ...
 
     @proper_setter(str)
-    def desc(self, value: str):
+    def desc(self):
         ...
 
     @proper_setter(DBRef, is_list=True)
-    def members(self, value: list[DBRef]):
+    def members(self):
         ...
 
 
@@ -675,63 +675,63 @@ class Creator(_RichItem):
         self.works = works or []
 
     @proper_setter(str)
-    def name(self, value: str):
+    def name(self):
         ...
 
     @proper_setter(Source, dissolve=True)
-    def avatar(self, value: Source):
+    def avatar(self):
         ...
 
     @proper_setter(str)
-    def platform(self, value: str):
+    def platform(self):
         ...
 
     @proper_setter(str)
-    def user_id(self, value: str):
+    def user_id(self):
         ...
 
     @proper_setter(str)
-    def homepage(self, value: str):
+    def homepage(self):
         ...
 
     @proper_setter(Pixiv, dissolve=True)
-    def pixiv(self, value: Pixiv):
+    def pixiv(self):
         ...
 
     @proper_setter(UID)
-    def primary(self, value: UID):
+    def primary(self):
         ...
 
     @proper_setter(CreatorRef, dissolve=True, is_list=True)
-    def sub_identities(self, value: list[CreatorRef]):
+    def sub_identities(self):
         ...
 
     @proper_setter(str, is_list=True)
-    def emails(self, value: list[str]):
+    def emails(self):
         ...
 
     @proper_setter(float)
-    def rating(self, value: float):
+    def rating(self):
         ...
 
     @proper_setter(str)
-    def gender(self, value: str):
+    def gender(self):
         ...
 
     @proper_setter(str)
-    def desc(self, value: str):
+    def desc(self):
         ...
 
     @proper_setter(datetime)
-    def birth(self, value: datetime):
+    def birth(self):
         ...
 
     @proper_setter(datetime)
-    def death(self, value: datetime):
+    def death(self):
         ...
 
     @proper_setter(DBRef, is_list=True)
-    def works(self, value: list[DBRef]):
+    def works(self):
         ...
 
 
@@ -773,7 +773,7 @@ class Album(_RichItem):
         self.created_time = created_time or datetime.utcnow()
 
     @proper_setter(str)
-    def title(self, value: str):
+    def title(self):
         ...
 
     @property
@@ -787,31 +787,31 @@ class Album(_RichItem):
         self["type"] = value.value
 
     @proper_setter(CreatorRef, dissolve=True, is_list=True)
-    def creators(self, value: list[CreatorRef]):
+    def creators(self):
         ...
 
     @proper_setter(Source, dissolve=True)
-    def cover(self, value: Source):
+    def cover(self):
         ...
 
     @proper_setter(str)
-    def desc(self, value: str):
+    def desc(self):
         ...
 
     @proper_setter(float)
-    def rating(self, value: float):
+    def rating(self):
         ...
 
     @proper_setter(Pixiv, dissolve=True)
-    def pixiv(self, value: Pixiv):
+    def pixiv(self):
         ...
 
     @proper_setter(UID, is_list=True)
-    def members(self, value: list[UID]):
+    def members(self):
         ...
 
     @proper_setter(datetime)
-    def created_time(self, value: datetime):
+    def created_time(self):
         ...
 
 
@@ -848,10 +848,10 @@ class Binary(_RichItem):
         self.created_time = created_time or datetime.utcnow()
         self.value = value
         self.refs = refs or []
-        self.md5 = md5 or hashlib.md5(value).hexdigest()
+        self.md5 = md5 or hashlib.md5(value).hexdigest()  # skipcq: BAN-B324
 
     @proper_setter(str)
-    def name(self, value: str):
+    def name(self):
         ...
 
     @property
@@ -865,19 +865,19 @@ class Binary(_RichItem):
         self["type"] = value.value
 
     @proper_setter(str)
-    def desc(self, value: str):
+    def desc(self):
         ...
 
     @proper_setter(datetime)
-    def created_time(self, value: datetime):
+    def created_time(self):
         ...
 
     @proper_setter(DBRef, is_list=True)
-    def refs(self, value: list[DBRef]):
+    def refs(self):
         ...
 
     @proper_setter(str)
-    def md5(self, value: str):
+    def md5(self):
         ...
 
     @property
@@ -887,7 +887,7 @@ class Binary(_RichItem):
     @value.setter
     def value(self, value: bytes):
         self["value"] = value
-        self.md5 = hashlib.md5(value).hexdigest()
+        self.md5 = hashlib.md5(value).hexdigest()  # skipcq: BAN-B324
 
 
 class Collection(_RichItem):
@@ -920,7 +920,7 @@ class Collection(_RichItem):
         self.created_time = created_time or datetime.utcnow()
 
     @proper_setter(str)
-    def name(self, value: str):
+    def name(self):
         ...
 
     @property
@@ -934,19 +934,19 @@ class Collection(_RichItem):
         self["type"] = value.value
 
     @proper_setter(Source, dissolve=True)
-    def cover(self, value: Source):
+    def cover(self):
         ...
 
     @proper_setter(str)
-    def desc(self, value: str):
+    def desc(self):
         ...
 
     @proper_setter(DBRef, is_list=True)
-    def members(self, value: list[DBRef]):
+    def members(self):
         ...
 
     @proper_setter(datetime)
-    def created_time(self, value: datetime):
+    def created_time(self):
         ...
 
 
@@ -961,19 +961,19 @@ class Trash(_Item):
         self.value = value
 
     @proper_setter(DBRef)
-    def ref(self, value: DBRef):
+    def ref(self):
         ...
 
     @proper_setter(datetime)
-    def birth(self, value: datetime):
+    def birth(self):
         ...
 
     @proper_setter(datetime)
-    def death(self, value: datetime):
+    def death(self):
         ...
 
     @proper_setter(dict)
-    def value(self, value: dict):
+    def value(self):
         ...
 
 

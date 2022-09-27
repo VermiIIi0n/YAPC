@@ -590,7 +590,7 @@ class PixivCrawler:
                 self._logger.warning(
                     f"Request {method} {url} failed: {ret.status_code}")
                 ret.raise_for_status()
-            except Exception as e:
+            except Exception as e:  # skipcq: PYL-W0703
                 self._logger.error(f"Request {method} {url} failed:")
                 self._logger.exception(e)
                 await asyncio.sleep(min(1.5**i, 30))
