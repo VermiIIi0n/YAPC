@@ -33,7 +33,8 @@ if not os.path.exists(real_path("./config.yaml")):
         _c = '\n'.join(_c.split('\n')[3:])
         with open(real_path("./config.yaml"), "w") as f2:
             f2.write(_c)
-    print(" Config file 'config.yaml' generated. Please edit it before running again.")
+    print(" Config file 'config.yaml' generated. "
+          "Please edit it before running again.")
     sys.exit(0)
 
 # Make dirs
@@ -88,7 +89,7 @@ log_level = "DEBUG" if args.debug else config.logging.level.upper()
 console = args.console or config.logging.console
 log_path = real_path(config.logging.path)
 backend = args.backend or config.database.backend
-path = real_path(args.path or config.database.path)
+path = args.path or config.database.path
 if not os.path.exists(real_dir(path)):
     os.makedirs(real_dir(path))
 match args.proxy.split("://"):
@@ -155,8 +156,10 @@ async def main():
             print(meta.version)
             sys.exit(0)
         try:
-            r = httpx.get(f"https://raw.githubusercontent.com/{meta.author}/YAPC/{meta.branch}/meta.json",
-                          proxies=proxies)
+            r = httpx.get(
+                "https://raw.githubusercontent.com/"
+                f"{meta.author}/YAPC/{meta.branch}/meta.json",
+                proxies=proxies)
             r = ObjDict(json.loads(r.text))
             if version_cmp(meta.version, r.version) < 0:
                 print("**********************************\n"
@@ -247,7 +250,7 @@ async def main():
         if not os.path.exists(os.path.join(git_dir, ".git")):
             git.Repo.init(git_dir, mkdir=True, initial_branch="master")
         repo = git.Repo(git_dir)
-        repo.git.add(path)
+        repo.git.add(real_path(path))
         try:
             repo.git.commit("-m", f"Update: {datetime.now().date()}")
         except git.GitCommandError as e:
@@ -315,11 +318,11 @@ def login(username: str = '', password: str = '') -> list[dict[str, str]]:
         driver.find_element(
             by=By.CLASS_NAME, value="signup-form__submit--login").click()
         driver.find_element(by=By.XPATH,
-                            value="//input[@autocomplete=\"username\"] ").send_keys(username)
+            value="//input[@autocomplete=\"username\"] ").send_keys(username)
         driver.find_element(by=By.XPATH,
-                            value="//input[@autocomplete=\"current-password\"]").send_keys(password)
+            value="//input[@autocomplete=\"current-password\"]").send_keys(password)
         driver.find_element(by=By.XPATH,
-                            value="//button[text()='Login']").click()
+            value="//button[text()='Login']").click()
 
         time.sleep(1)
         raw = driver.get_cookies()
@@ -329,7 +332,7 @@ def login(username: str = '', password: str = '') -> list[dict[str, str]]:
             raw = driver.get_cookies()
             t += 1
             if t > 60:
-                raise RuntimeError("Login failed. Cookies fetching timeout.")
+                raise TimeoutError("Login failed. Cookies fetching timeout.")
         driver.close()
         return raw
     except NoSuchWindowException as e:

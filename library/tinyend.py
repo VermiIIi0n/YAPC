@@ -1,13 +1,12 @@
 """Async-TinyDB Backend Library for Pixiv"""
 from __future__ import annotations
-import ujson as json
 from . import prototypes as proto
 from ._extended_json import json_convert, r_recover
 from datetime import datetime, timedelta, timezone
 from asynctinydb import TinyDB, Query, JSONStorage
 from asynctinydb.table import BaseID, Table, Document
 from asynctinydb.middlewares import CachingMiddleware
-from typing import Any, AsyncIterator, Type, AnyStr, TypeVar, Generic, TypeAlias
+from typing import Any, AsyncIterator, Type, TypeVar, Generic, TypeAlias
 from utils import merge_ancestors, gen_table
 
 ItemVar = TypeVar("ItemVar", bound="Item")
@@ -62,7 +61,7 @@ class UID(BaseID, proto.UID):
         return new
 
     @classmethod
-    async def mark_exists(cls, table: Table, new_id) -> None:
+    async def mark_existed(cls, table: Table, new_id) -> None:
         if table.name not in cls._cache:
             cls._cache[table.name] = {d.doc_id for d in await table.all()}
         cls._cache[table.name].add(new_id)

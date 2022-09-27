@@ -111,10 +111,11 @@ async def migrate(args: argparse.Namespace):
         ls = []
         count = 0
         libf.get_shelf(name)._cache.clear()
+        libt.get_shelf(name)._cache.clear()
 
         print(f"Migrated {name}")
 
-    # await libf.close()
+    await libf.close()
     await libt.close()
     print("Migration Complete")
 

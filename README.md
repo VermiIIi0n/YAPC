@@ -19,7 +19,13 @@ YAPC is designed to automatically download your bookmarks from Pixiv with extra 
 
 ### Notices
 
-If you run into any problems, maybe you should check out [this.](#Common-Questions)
+If you run into any problems, go check out [this.](#Common-Questions)
+
+To do:
+
+* Auto-crawl new works from artists
+* Database validator _(tools.py)_
+* More ways to send notifications
 
 Version Notes:
 

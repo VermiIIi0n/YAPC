@@ -111,7 +111,7 @@ def gen_table(rows: Iterable[str|None], max_length: int=0) -> str:
     return '\n'+'\n'.join(outs)+'\n'
 
 def selenium_cookies_to_jar(raws: list[dict[str, str]]) -> CookieJar:
-    """Converts selenium cookies to http.cookiejar.CookieJar"""
+    """Converts selenium cookies to `http.cookiejar.CookieJar`"""
     jar = CookieJar()
     for r in raws:
         cookie = Cookie(**{  # type: ignore
