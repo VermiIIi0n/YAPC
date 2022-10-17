@@ -33,6 +33,8 @@ class SideLogger(Thread):
     * Use with caution when logging to console."""
 
     def __init__(self, logger: LoggerLike, heartbeat: float = 0.01) -> None:
+        """### SideLogger: Wraps a logger to log in a separate thread.
+        * Use with caution when logging to console."""
         Thread.__init__(self)
         self._heartbeat = heartbeat
         self._queue: Queue = Queue()

@@ -8,19 +8,24 @@ template = """<!DOCTYPE html>
 <body>{body}</body>
 </html>"""
 
+
 def _wrap(msg):
     return template.replace("{body}", msg)
+
 
 _sender = ""
 _recipients: list[str] = []
 _api_key = ""
 _domain = ""
+
+
 def init(sender, recipients, api_key, domain):
     global _sender, _recipients, _api_key, _domain
     _sender = sender
     _recipients = recipients
     _api_key = api_key
     _domain = domain
+
 
 def send(msg: str, title: str):
     httpx.post(
@@ -30,6 +35,7 @@ def send(msg: str, title: str):
               "to": _recipients,
               "subject": title,
               "html": msg})
+
 
 def on_success(before: str, after: str, deleted: int, config):
     with open(os.path.join(config.logging.path, "error.log"), "r") as f:
@@ -58,10 +64,12 @@ def on_success(before: str, after: str, deleted: int, config):
 {error_log}
 ```
 """.replace("{error_log}", error_log).replace(
-    "{before}", before).replace("{after}", after).replace("{deleted}", 
-    f"Encountered {deleted} deleted work{'s' * (deleted>1)}.")
+        "{before}", before).replace("{after}", after).replace("{deleted}",
+                                                              f"Encountered {deleted} deleted work{'s' * (deleted>1)}.")
 
-    send(_wrap(md(msg, extensions=['fenced_code'])), "YAPC: Success")
+    send(_wrap(md(msg, extensions=['fenced_code'])),
+         "YAPC: Success" + " With Errors"*bool(deleted or error_log))
+
 
 def on_failure(exc_type, exc_value, exc_tb, config):
     with open(os.path.join(config.logging.path, "error.log"), "r") as f:
@@ -85,8 +93,8 @@ def on_failure(exc_type, exc_value, exc_tb, config):
 {error_log}
 ```
  """.replace("{error_log}", error_log
-    ).replace("{traceback}", '\n'.join(traceback.format_tb(exc_tb))
-    ).replace("{exc_value}", str(exc_value)
-    ).replace("{exc_type}", exc_type.__name__)
+             ).replace("{traceback}", '\n'.join(traceback.format_tb(exc_tb))
+                       ).replace("{exc_value}", str(exc_value)
+                                 ).replace("{exc_type}", exc_type.__name__)
 
     send(_wrap(md(msg, extensions=['fenced_code'])), "YAPC: Failure")

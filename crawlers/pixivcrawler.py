@@ -236,7 +236,7 @@ class PixivCrawler:
             if not overwrite:
                 self._logger.info(f"Skip crawling existing work {pid}")
                 return a_id
-            self._logger.info(f"Picture {pid} already exists, overwriting")
+            self._logger.info(f"Work {pid} already exists, overwriting")
         else:
             a_id = await self._lib.Albums.new_uid()
 
@@ -480,7 +480,7 @@ class PixivCrawler:
         self._logger.info("Closing Pixiv client")
         await self.event_hooks.aemit("destroy", self)
         await self.lib.close()
-        await self.puller.join()
+        await self.puller.aclose()
 
     async def __aenter__(self):
         return self

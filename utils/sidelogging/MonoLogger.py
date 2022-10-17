@@ -6,6 +6,7 @@ import os
 __all__ = ["MonoLogger"]
 
 class MonoLogger:
+    """### MonoLogger: A logger that logs to separate files."""
     _logger_map: dict[str, MonoLogger] = {}
 
     def __init__(

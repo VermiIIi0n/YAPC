@@ -18,7 +18,7 @@ from selenium import webdriver
 from rich.progress import Progress
 from selenium.common.exceptions import NoSuchWindowException
 from selenium.webdriver.common.by import By
-from crawler import PixivCrawler
+from crawlers import PixivCrawler
 from utils import real_dir, real_path, ObjDict, version_cmp
 from utils import SideLogger, MonoLogger, selenium_cookies_to_jar as s2j
 
@@ -126,14 +126,18 @@ if config.notification.enable:
         notifier.init(**h_opts)
         notifiers.append(notifier)
 
+    old_hook = sys.excepthook
+
     def uncaught_exc(exc_type, exc_value, exc_traceback):
         """A helper function to catch uncaught exceptions."""
         logger.exception("Uncaught exception", exc_info=(
             exc_type, exc_value, exc_traceback))
         logger.join()
+        print("Uncaught exception occured. See log for details.")
         if on_failure:
             for n in notifiers:
                 n.on_failure(exc_type, exc_value, exc_traceback, config)
+        old_hook(exc_type, exc_value, exc_traceback)
 
     sys.excepthook = uncaught_exc
 
@@ -162,10 +166,9 @@ async def main():
                 proxies=proxies)
             r = ObjDict(json.loads(r.text))
             if version_cmp(meta.version, r.version) < 0:
-                print("**********************************\n"
-                      " A new version is available.\n" +
-                      f" Currenct version: {meta.version}\n" +
-                      f" Latest version: {r.version}\n" +
+                print("\n**********************************\n"
+                      f" New version available: {r.version}\n"
+                      f" Currenct version: {meta.version}\n"
                       "**********************************\n")
         except Exception:  # skipcq: PYL-W0703
             print("Failed to check for updates.")
@@ -236,7 +239,7 @@ async def main():
         deleted += 1
 
     # Link start!
-    await crawler.crawl_bookmarks(uid, start, stop, ascend, private, tag)
+    await crawler.crawl_bookmarks(uid, start, stop, ascend, private, tag, overwrite=overwrite)
 
     print(f"Found {deleted} deleted work{'s' * (deleted>1)}.")
 

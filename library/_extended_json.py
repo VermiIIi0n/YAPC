@@ -73,7 +73,7 @@ def convert(obj: Any) -> Any:
         return {"$uuid": obj.hex}
     raise TypeError(f"Not in converting list: {obj}")
 
-
+ 
 def recover(dct: dict[str, Any]) -> Any:
     if "$oid" in dct:
         return _parse_canonical_oid(dct)

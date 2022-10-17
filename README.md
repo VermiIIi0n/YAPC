@@ -1,4 +1,4 @@
-# Yet Another Pixiv Crawler
+# Yet Another Picture Crawler
 
 ### Intro
 
@@ -6,9 +6,9 @@ Are you tired of finding out the works you liked are deleted or set to private?
 
 YAPC is the answer to that.
 
-YAPC is designed to automatically download your bookmarks from Pixiv with extra info such as their author, PID and tags... Then save them to a database. 
+YAPC is designed to automatically download your favorites from Pixiv and many other sites with extra info such as their author, PID and tags... Then save them to a database. 
 
-**Although YAPC is designed for Pixiv, the data model used in the database isn't**. The data model is a more generic one that I use to save all my data. So you may find some "unnecessary" information in the database.  To find the prototypes of all items, go to _./library/prototypes.py_.
+**Although YAPC is originally designed for Pixiv, the data model used in the database isn't**. The data model is a more generic one that I use to save all my data. So you may find some "unnecessary" information in the database.  To find the prototypes of all items, go to _./library/prototypes.py_.
 
 ### Features
 

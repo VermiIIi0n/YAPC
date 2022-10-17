@@ -7,6 +7,7 @@ from asynctinydb import TinyDB, Query, JSONStorage
 from asynctinydb.table import BaseID, Table, Document
 from asynctinydb.middlewares import CachingMiddleware
 from typing import Any, AsyncIterator, Type, TypeVar, Generic, TypeAlias
+from typing import Collection as TypeCollection
 from utils import merge_ancestors, gen_table
 
 ItemVar = TypeVar("ItemVar", bound="Item")
@@ -51,19 +52,20 @@ class UID(BaseID, proto.UID):
         return False
 
     @classmethod
-    async def next_id(cls, table: Table) -> UID:
+    def next_id(cls, table: Table, keys: TypeCollection[UID]) -> UID:
         new = UID(proto.UID())
-        if table.name not in cls._cache:
-            cls._cache[table.name] = {d.doc_id for d in await table.all()}
-        if new in cls._cache[table.name]:
-            return await cls.next_id(table)
-        cls._cache[table.name].add(new)
+        cache = cls._cache.pop(table.name, set())
+        cache = cache.union(keys)
+        cls._cache[table.name] = cache
+        if new in keys:
+            return cls.next_id(table, keys)
+        cache.add(new)
         return new
 
     @classmethod
-    async def mark_existed(cls, table: Table, new_id) -> None:
+    def mark_existed(cls, table: Table, new_id) -> None:
         if table.name not in cls._cache:
-            cls._cache[table.name] = {d.doc_id for d in await table.all()}
+            cls._cache[table.name] = set()
         cls._cache[table.name].add(new_id)
 
     @classmethod
@@ -523,7 +525,8 @@ class Shelf(proto.Shelf, Generic[ItemVar]):
         return ret
 
     async def new_uid(self):
-        return await UID.next_id(self._table)
+        keys = (await self._table._read_table()).keys()
+        return UID.next_id(self._table, keys)
 
     def __aiter__(self) -> AsyncIterator[ItemVar]:
         async def iteror():
